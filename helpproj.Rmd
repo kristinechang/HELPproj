@@ -1,0 +1,17 @@
+---
+title: "HELPproj"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rmarkdown)
+library(tidyverse)
+```
+
+Load in data set:
+```{r}
+help <- read_csv("https://pomona.box.com/shared/static/nty3oxpb8db1y763l6uusxtq4gukbcev")
+```
+
+Testing
