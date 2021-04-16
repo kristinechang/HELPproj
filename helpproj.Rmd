@@ -1,17 +1,51 @@
 ---
 title: "HELPproj"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
+authors: "Kristine Chang and Hanna Kim"
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(rmarkdown)
 library(tidyverse)
+library(mosaic)
+library(survminer)
+library(survival)
 ```
 
-Load in data set:
+
+#### Load in data set
+
 ```{r}
 help <- read_csv("https://pomona.box.com/shared/static/nty3oxpb8db1y763l6uusxtq4gukbcev")
 ```
 
-Testing
+
+#### Exploratory Data Analysis
+
+```{r}
+#survival analysis curve
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ 1, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+
+#survival analysis based on gender
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ a1, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+```
+```{r}
+#does education affect dayslink?
+#graph shows the number of years of education plotted against average time to connect to primary care
+help %>%
+  filter(a9>5) %>%
+  group_by(a9) %>%
+  summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
+  ggplot() + 
+	geom_bar(aes(x = a9, y = avgdayslink), stat="identity") 
+```
+
+#### Something New
+
