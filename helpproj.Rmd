@@ -277,7 +277,7 @@ G9 <- 2*(-718.0079-(-718.0145))
 help %>%
   group_by(m16) %>%
   summarize(n())
-
+ 
 #if I am interpreting this right, there are A TON of NAs in the "yes" group. meaning we should not use this variable
 ```
 
