@@ -60,8 +60,8 @@ We will do two topics: investigation of the proportional hazards assumptions usi
 
 #### More EDA
 
-#variables tried (and not interested): age, gender, race
-#variables interested: group (by default), education, anysubstatus, abuse2
+#variables tried (and not interested): age, gender, race, M16, E10B1_R
+#variables interested: group (by default), education, anysubstatus, abuse2, F1I, E15C2 (maybe)
 
 ```{r}
 #GROUP
@@ -79,7 +79,7 @@ coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
 G0 <- 2*(-683.2197-(-718.0145))
 1-pchisq(G0,1)
 
-#gender does not significantly affect the curve
+#group does significantly affect the curve
 ```
 
 ```{r}
@@ -196,9 +196,7 @@ G5 <- 2*(-710.266-(-718.0145))
 ```
 
 ```{r}
-  help_surv <- survfit(Surv(dayslink, linkstatus) ~ race2, data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
-  ggtitle("HELP data EDA")
+#race: Race (1=Black, 2=White, 3=Hispanic, 4=Other)
 
 help_surv <- survfit(Surv(dayslink, linkstatus) ~ race, data=help)
 ggsurvplot(help_surv, conf.type = "TRUE") +
@@ -208,9 +206,102 @@ coxph(Surv(dayslink,linkstatus) ~ race, data = help) %>% glance()
 coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
 
 #G-statistic
-G5 <- 2*(-717.5563-(-718.0145	))
-1-pchisq(G5,1)
+G6 <- 2*(-717.5563-(-718.0145	))
+1-pchisq(G6,1)
 
 #race is not significant (maybe ask hardin about splitting up races)
+
+help %>%
+  group_by(race) %>%
+  summarize(n())
+
+#is that a lot of NAs?
 ```
+
+```{r}
+#F1I: I thought my life had been a failure (0=Rarely/never, 1=Some of the time, 2=Ocassionally, 3=Most of the time)
+
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ f1i, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+
+coxph(Surv(dayslink,linkstatus) ~ f1i, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
+
+#G-statistic
+G7 <- 2*(-716.0107-(-718.0145))
+1-pchisq(G7,1)
+
+#F1I is significant (interesting, I thought those who more often thought their life was a failure would take longer to link with primary care) 
+```
+
+```{r}
+#E15C2: I did not know where to go for help (0=No, 1=Yes)
+
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ e15c2, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+
+coxph(Surv(dayslink,linkstatus) ~ e15c2, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
+
+#G-statistic
+G8 <- 2*(-107.8898-(-718.0145))
+1-pchisq(G8,1)
+
+#E15C2 is significant (way too small of a p-value, pretty sus) 
+
+help %>%
+  group_by(e15c2) %>%
+  summarize(n())
+
+#seems like there's not that many NAs...or am I trippin
+```
+
+```{r}
+#M16: Felt guilt/ashamed because of my alcohol drug use (0=No, 1=Yes)
+
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ m16, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+
+coxph(Surv(dayslink,linkstatus) ~ m16, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
+
+#G-statistic
+G9 <- 2*(-718.0079-(-718.0145))
+1-pchisq(G9,1)
+
+#M16 is not significant  
+
+help %>%
+  group_by(m16) %>%
+  summarize(n())
+
+#if I am interpreting this right, there are A TON of NAs in the "yes" group. meaning we should not use this variable
+```
+
+```{r}
+#E10B1_R: Mental health treatment in the past 6 months (0=No, 1=Yes)
+
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ e10b1_r, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+
+coxph(Surv(dayslink,linkstatus) ~ e10b1_r, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
+
+#G-statistic
+G10 <- 2*(-718.0126-(-718.0145))
+1-pchisq(G10,1)
+
+#E10B1_R is not significant  
+
+help %>%
+  group_by(e10b1_r) %>%
+  summarize(n())
+
+#if I am interpreting this right, there are A TON of NAs in the "no" group. meaning we should not use this variable
+```
+
 
