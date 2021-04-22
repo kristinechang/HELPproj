@@ -60,7 +60,7 @@ We will do two topics: investigation of the proportional hazards assumptions usi
 
 #### More EDA
 
-#variables tried (and not interested): age, gender
+#variables tried (and not interested): age, gender, race
 #variables interested: group (by default), education, anysubstatus, abuse2
 
 ```{r}
@@ -194,3 +194,23 @@ G5 <- 2*(-710.266-(-718.0145))
 
 #type of abuse does significantly affect the curve
 ```
+
+```{r}
+  help_surv <- survfit(Surv(dayslink, linkstatus) ~ race2, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ race, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+
+coxph(Surv(dayslink,linkstatus) ~ race, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
+
+#G-statistic
+G5 <- 2*(-717.5563-(-718.0145	))
+1-pchisq(G5,1)
+
+#race is not significant (maybe ask hardin about splitting up races)
+```
+
