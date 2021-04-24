@@ -18,6 +18,10 @@ library(survival)
 library(broom)
 ```
 
+#QUESTIONS
+#what to do w missing data in the "anysubstatus" column
+#do we need to as.factor() abuse type, aka make it categorical? what will that do for us?
+
 #### Load in data set
 
 We load in the data.
@@ -42,6 +46,7 @@ help_surv <- survfit(Surv(dayslink, linkstatus) ~ a1, data=help)
 ggsurvplot(help_surv, conf.type = "TRUE") +
   ggtitle("HELP data EDA")
 ```
+
 ```{r}
 #does education affect dayslink?
 #graph shows the number of years of education plotted against average time to connect to primary care
@@ -61,7 +66,7 @@ We will do two topics: investigation of the proportional hazards assumptions usi
 #### More EDA
 
 #variables tried (and not interested): age, gender, race, M16, E10B1_R
-#variables interested: group (by default), education, anysubstatus, abuse2, F1I, E15C2 (maybe)
+#variables interested: group (by default), education, anysubstatus, abuse2, alcohol, F1I, E15C2 (maybe)
 
 ```{r}
 #GROUP
@@ -144,6 +149,12 @@ help %>%
   summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
   ggplot() + 
 	geom_line(aes(x = a9, y = avgdayslink), stat="identity") 
+
+#not that many people who have had 16> years education
+help %>%
+  #filter(a9>16) %>%
+  group_by(a9) %>%
+  summarize(n())
 ```
 
 ```{r}
@@ -175,21 +186,25 @@ help %>%
 
 help %>%
   group_by(abuse2) %>%
+  summarize(n())
+
+help %>%
+  group_by(abuse2) %>%
   summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
   ggplot() + 
 	geom_bar(aes(x = abuse2, y = avgdayslink), stat="identity") 
 
 #survival analysis based on abuse type
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ abuse2, data=help)
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ as.factor(abuse2), data=help)
 ggsurvplot(help_surv, conf.type = "TRUE") +
   ggtitle("HELP data EDA")
 
 #seeing whether abuse type significantly affects the survival curve
-coxph(Surv(dayslink,linkstatus) ~ abuse2, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(abuse2), data = help) %>% glance()
 coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
 
 #G-statistic
-G5 <- 2*(-710.266-(-718.0145))
+G5 <- 2*(-708.6925-(-718.0145))
 1-pchisq(G5,1)
 
 #type of abuse does significantly affect the curve
@@ -304,4 +319,32 @@ help %>%
 #if I am interpreting this right, there are A TON of NAs in the "no" group. meaning we should not use this variable
 ```
 
+```{r}
+#alcohol: 1st/2nd drug of choice=Alcohol (0=No, 1=Yes)
 
+help %>%
+  group_by(alcohol) %>%
+  summarize(n())
+
+help %>%
+  group_by(alcohol) %>%
+  summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
+  ggplot() + 
+	geom_bar(aes(x = alcohol, y = avgdayslink), stat="identity") 
+
+#survival analysis based on alcohol
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ alcohol, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+
+#seeing whether abuse type significantly affects the survival curve
+coxph(Surv(dayslink,linkstatus) ~ anysubstatus + alcohol, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ alcohol, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
+
+#G-statistic between anysubstatus + alcohol and just alcohol
+G5 <- 2*(--411.8382-(-715.9021))
+1-pchisq(G5,1)
+
+#alcohol does significantly affect the curve
+```
