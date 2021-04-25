@@ -1,0 +1,62 @@
+---
+title: "firstdraft"
+output: html_document
+---
+
+```{r global_options, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, fig.height=3, fig.width=5, 
+                      fig.align = "center")
+library(rmarkdown)
+library(tidyverse)
+library(mosaic)
+library(survminer)
+library(tidyr)
+library(dplyr)
+library(survival)
+library(broom)
+```
+
+#QUESTIONS
+#what to do w missing data in the "anysubstatus" column
+#how to tell if coxph assumptions hold for our model w 4 variables? esp for a variable like "alcohol" which could change over time
+
+#### Load in data set
+
+We load in the data.
+
+```{r}
+help <- read_csv("https://pomona.box.com/shared/static/nty3oxpb8db1y763l6uusxtq4gukbcev")
+```
+
+
+#### Exploratory Data Analysis
+
+We made three curves/graphs to explore variables in the data.
+
+```{r}
+#survival analysis curve
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ 1, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+
+#survival analysis based on gender
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ a1, data=help)
+ggsurvplot(help_surv, conf.type = "TRUE") +
+  ggtitle("HELP data EDA")
+```
+
+```{r}
+#does education affect dayslink?
+#graph shows the number of years of education plotted against average time to connect to primary care
+help %>%
+  filter(a9>5) %>%
+  group_by(a9) %>%
+  summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
+  ggplot() + 
+	geom_bar(aes(x = a9, y = avgdayslink), stat="identity") 
+```
+
+#### Something New
+
+
+We will do two topics: investigation of the proportional hazards assumptions using the coxph() function and an analysis of possible time-dependent covariates. The proportional hazards assumptions are needed in survival analysis in order to understand whether hazard ratios vary with time; if the proportional hazards assumption hold, then hazard ratios between groups stay constant over time. On the other hand, time-dependent covariates are covariates that change over time (e.g. stress levels, smoking status, blood pressure) and may affect survival curves. Since we're both interested in both topics, we'll likely work together to understand and implement them. To learn about the proportional hazards assumptions, we'll use the class notes; to learn about both topics, we'll use Youtube videos, math research papers available on Google (we're compiling a doc at https://docs.google.com/document/d/1V1aqCLF6B0XPUkMuXKimcrAGgGZWNOzWSHi0YBvfzYA/edit?usp=sharing with resources), and office hours. Learning about proportional hazards assumptions through coxph() will be challenging because it is a new function in R and we will need to better understand how/why the function works. Learning about time-dependent covariates will be challenging, as we'll need to learn about functions that vary with time, how to implement these covariates in R, and how to interpret them.

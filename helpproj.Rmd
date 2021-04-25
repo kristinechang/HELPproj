@@ -20,7 +20,12 @@ library(broom)
 
 #QUESTIONS
 #what to do w missing data in the "anysubstatus" column
-#do we need to as.factor() abuse type, aka make it categorical? what will that do for us?
+#group violates PH based on coxzph. what to do ?!?
+#ask for help for a alcohol vs. anysubstatus graph
+#what to write in the "methods" section?
+#transformations—how do we know when we should transform a variable? esp a categorical one?
+#extension on rough draft,..?
+#time dependent covariates...do we need to give a summary of what they are in the paper? is it okay if we only analyze like, one time dependent covariate (maybe education or alcohol or substatus)?
 
 #### Load in data set
 
@@ -30,43 +35,10 @@ We load in the data.
 help <- read_csv("https://pomona.box.com/shared/static/nty3oxpb8db1y763l6uusxtq4gukbcev")
 ```
 
+#### EDA
 
-#### Exploratory Data Analysis
-
-We made three curves/graphs to explore variables in the data.
-
-```{r}
-#survival analysis curve
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ 1, data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
-  ggtitle("HELP data EDA")
-
-#survival analysis based on gender
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ a1, data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
-  ggtitle("HELP data EDA")
-```
-
-```{r}
-#does education affect dayslink?
-#graph shows the number of years of education plotted against average time to connect to primary care
-help %>%
-  filter(a9>5) %>%
-  group_by(a9) %>%
-  summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
-  ggplot() + 
-	geom_bar(aes(x = a9, y = avgdayslink), stat="identity") 
-```
-
-#### Something New
-
-
-We will do two topics: investigation of the proportional hazards assumptions using the coxph() function and an analysis of possible time-dependent covariates. The proportional hazards assumptions are needed in survival analysis in order to understand whether hazard ratios vary with time; if the proportional hazards assumption hold, then hazard ratios between groups stay constant over time. On the other hand, time-dependent covariates are covariates that change over time (e.g. stress levels, smoking status, blood pressure) and may affect survival curves. Since we're both interested in both topics, we'll likely work together to understand and implement them. To learn about the proportional hazards assumptions, we'll use the class notes; to learn about both topics, we'll use Youtube videos, math research papers available on Google (we're compiling a doc at https://docs.google.com/document/d/1V1aqCLF6B0XPUkMuXKimcrAGgGZWNOzWSHi0YBvfzYA/edit?usp=sharing with resources), and office hours. Learning about proportional hazards assumptions through coxph() will be challenging because it is a new function in R and we will need to better understand how/why the function works. Learning about time-dependent covariates will be challenging, as we'll need to learn about functions that vary with time, how to implement these covariates in R, and how to interpret them.
-
-#### More EDA
-
-#variables tried (and not interested): age, gender, race (ask hardin about this one tomorrow morning), M16, E10B1_R, E15C2, G1B_30
-#variables interested: group (by default), education, anysubstatus, abuse2, alcohol, F1I 
+#variables tried (and not interested): age, gender, race (ask hardin about this one tomorrow morning), M16, E10B1_R, E15C2, G1B_30, abuse2
+#variables interested: group (by default), education, anysubstatus, alcohol, F1I 
 
 ```{r}
 #GROUP
@@ -85,44 +57,11 @@ G0 <- 2*(-683.2197-(-718.0145))
 1-pchisq(G0,1)
 
 #group does significantly affect the curve
-```
 
-```{r}
-#GENDER
-
-#survival analysis based on gender
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ a1, data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
-  ggtitle("HELP data EDA")
-
-#seeing whether gender significantly affects the survival curve
-coxph(Surv(dayslink,linkstatus) ~ a1, data = help) %>% glance()
-coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
-
-#G-statistic
-G1 <- 2*(-716.9893-(-718.0145))
-1-pchisq(G1,1)
-
-#gender does not significantly affect the curve
-```
-
-```{r}
-#AGE
-
-#survival analysis based on age
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ age, data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
-  ggtitle("HELP data EDA")
-
-#seeing whether age significantly affects the survival curve
-coxph(Surv(dayslink,linkstatus) ~ age, data = help) %>% glance()
-coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
-
-#G-statistic
-G2 <- 2*(-716.8824-(-718.0145))
-1-pchisq(G2,1)
-
-#age does not significantly affect the curve
+help %>%
+  #filter(a9>16) %>%
+  group_by(group) %>%
+  summarize(n())
 ```
 
 ```{r}
@@ -136,6 +75,8 @@ ggsurvplot(help_surv, conf.type = "TRUE") +
 #seeing whether age significantly affects the survival curve
 coxph(Surv(dayslink,linkstatus) ~ a9, data = help) %>% glance()
 coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
+
+coxph(Surv(dayslink,linkstatus) ~ a9, data = help) %>% tidy()
 
 #G-statistic
 G3 <- 2*(-709.6091-(-718.0145))
@@ -169,6 +110,8 @@ ggsurvplot(help_surv, conf.type = "TRUE") +
 coxph(Surv(dayslink,linkstatus) ~ anysubstatus, data = help) %>% glance()
 coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
 
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus), data = help) %>% tidy()
+
 #G-statistic
 G4 <- 2*(-413.4942-(-718.0145))
 1-pchisq(G4,1)
@@ -182,58 +125,6 @@ help %>%
 ```
 
 ```{r}
-#abuse2: Type of abuse (0=No abuse, 1=Physical only, 2=Sexual only, 3=Physical and sexual)
-
-help %>%
-  group_by(abuse2) %>%
-  summarize(n())
-
-help %>%
-  group_by(abuse2) %>%
-  summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
-  ggplot() + 
-	geom_bar(aes(x = abuse2, y = avgdayslink), stat="identity") 
-
-#survival analysis based on abuse type
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ as.factor(abuse2), data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
-  ggtitle("HELP data EDA")
-
-#seeing whether abuse type significantly affects the survival curve
-coxph(Surv(dayslink,linkstatus) ~ as.factor(abuse2), data = help) %>% glance()
-coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
-
-#G-statistic
-G5 <- 2*(-708.6925-(-718.0145))
-1-pchisq(G5,1)
-
-#type of abuse does significantly affect the curve
-```
-
-```{r}
-#race: Race (1=Black, 2=White, 3=Hispanic, 4=Other)
-
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ race, data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
-  ggtitle("HELP data EDA")
-
-coxph(Surv(dayslink,linkstatus) ~ race, data = help) %>% glance()
-coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
-
-#G-statistic
-G6 <- 2*(-717.5563-(-718.0145	))
-1-pchisq(G6,1)
-
-#race is not significant (maybe ask hardin about splitting up races)
-
-help %>%
-  group_by(race) %>%
-  summarize(n())
-
-#is that a lot of NAs?
-```
-
-```{r}
 #F1I: I thought my life had been a failure (0=Rarely/never, 1=Some of the time, 2=Ocassionally, 3=Most of the time)
 
 help_surv <- survfit(Surv(dayslink, linkstatus) ~ f1i, data=help)
@@ -243,81 +134,13 @@ ggsurvplot(help_surv, conf.type = "TRUE") +
 coxph(Surv(dayslink,linkstatus) ~ f1i, data = help) %>% glance()
 coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
 
+coxph(Surv(dayslink,linkstatus) ~ f1i, data = help) %>% tidy()
+
 #G-statistic
 G7 <- 2*(-716.0107-(-718.0145))
 1-pchisq(G7,1)
 
 #F1I is significant (interesting, I thought those who more often thought their life was a failure would take longer to link with primary care) 
-```
-
-```{r}
-#E15C2: I did not know where to go for help (0=No, 1=Yes)
-
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ e15c2, data=help)
-ggsurvplot(help_surv, conf.type="log", censor=F, conf.int=T) +
-  ggtitle("HELP data EDA")
-
-coxph(Surv(dayslink,linkstatus) ~ e15c2, data = help) %>% glance()
-coxph(Surv(dayslink,linkstatus) ~ e15c2, data = help) %>% tidy()
-coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
-
-#G-statistic
-G8 <- 2*(-107.8898-(-718.0145))
-1-pchisq(G8,1)
-
-#E15C2 is not significant (even though G-stat is significant; look at tidy()pval and logCI on KM curves)
-
-help %>%
-  group_by(e15c2) %>%
-  summarize(n())
-
-#seems like there's not that many NAs
-```
-
-```{r}
-#M16: Felt guilt/ashamed because of my alcohol drug use (0=No, 1=Yes)
-
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ m16, data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
-  ggtitle("HELP data EDA")
-
-coxph(Surv(dayslink,linkstatus) ~ m16, data = help) %>% glance()
-coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
-
-#G-statistic
-G9 <- 2*(-718.0079-(-718.0145))
-1-pchisq(G9,1)
-
-#M16 is not significant  
-
-help %>%
-  group_by(m16) %>%
-  summarize(n())
- 
-#if I am interpreting this right, there are A TON of NAs in the "yes" group. meaning we should not use this variable
-```
-
-```{r}
-#E10B1_R: Mental health treatment in the past 6 months (0=No, 1=Yes)
-
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ e10b1_r, data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
-  ggtitle("HELP data EDA")
-
-coxph(Surv(dayslink,linkstatus) ~ e10b1_r, data = help) %>% glance()
-coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
-
-#G-statistic
-G10 <- 2*(-718.0126-(-718.0145))
-1-pchisq(G10,1)
-
-#E10B1_R is not significant  
-
-help %>%
-  group_by(e10b1_r) %>%
-  summarize(n())
-
-#if I am interpreting this right, there are A TON of NAs in the "no" group. meaning we should not use this variable
 ```
 
 ```{r}
@@ -347,27 +170,96 @@ coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
 G5 <- 2*(--411.8382-(-715.9021))
 1-pchisq(G5,1)
 
+#tidy
+coxph(Surv(dayslink,linkstatus) ~ alcohol, data = help) %>% tidy()
+
 #alcohol does significantly affect the curve
 ```
-
 ```{r}
-#G1B_30 Had thoughts of suicide - last 30 days (0=No, 1=Yes)
+#abuse2: Type of abuse (0=No abuse, 1=Physical only, 2=Sexual only, 3=Physical and sexual)
 
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ g1b_30, data=help)
+help %>%
+  group_by(abuse2) %>%
+  summarize(n())
+
+help %>%
+  group_by(abuse2) %>%
+  summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
+  ggplot() + 
+	geom_bar(aes(x = abuse2, y = avgdayslink), stat="identity") 
+
+#survival analysis based on abuse type
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ as.factor(abuse2), data=help)
 ggsurvplot(help_surv, conf.type="log", censor=F, conf.int=T) +
   ggtitle("HELP data EDA")
 
-coxph(Surv(dayslink,linkstatus) ~ g1b_30, data = help) %>% glance()
-coxph(Surv(dayslink,linkstatus) ~ g1b_30, data = help) %>% tidy()
+#seeing whether abuse type significantly affects the survival curve
+coxph(Surv(dayslink,linkstatus) ~ as.factor(abuse2), data = help) %>% glance()
 coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
 
+coxph(Surv(dayslink,linkstatus) ~ as.factor(abuse), data = help) %>% tidy()
+
 #G-statistic
-G11 <- 2*(-177.9322-(-718.0145))
-1-pchisq(G11,1)
+G5 <- 2*(-708.6925-(-718.0145))
+1-pchisq(G5,1)
 
-#G1B_30 is not significant, even though G-stat gives a significant result; look at tidy()p-val and logCI on KM curves
-
-help %>%
-  group_by(g1b_30) %>%
-  summarize(n())
+#type of abuse does NOT significantly affect the curve
 ```
+
+```{r}
+coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data = help) %>% glance()
+
+coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus), data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus), data = help) %>% glance()
+
+#let's keep alcohol
+G <- 2*(-386.3138-(-388.8306))
+1-pchisq(G,1)
+
+coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + as.factor(anysubstatus) + as.factor(alcohol), data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + as.factor(anysubstatus) + as.factor(alcohol), data = help) %>% glance()
+
+#let's keep a9
+G <- 2*(-386.3138-(-389.7752))
+1-pchisq(G,1)
+```
+
+#r-sections for our paper
+
+#a9: education has a negative coefficient which is unexpected (more years education = lower hazard of being linked to primary care). maybe bc if you're highly educated and in a detox unit, your circumstances are out of the ordinary/extremely strenuous. maybe also shame?
+
+#for alcohol, we see if your 1st/2nd drug of choice is alcohol, you have a higher rate of getting linked to primary care. weird?!?!?!?!? but then you look @ any substatus and see that if you've used any of an assortment of drugs, your rate of getting linked lowers. so, maybe alcohol is relatively less harmful than other substances, so if people's 1st/2nd drug of choice is NOT alcohol, they're using relatively more harmful/illegal/illicit substances. 
+
+#graph 1: survival curve between group and treatment
+```{r}
+#survival curve between group and treatment
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ group, data=help)
+ggsurvplot(help_surv, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("HELP data EDA")
+```
+
+#group 2: education vs. days to link
+```{r}
+help %>%
+  filter(a9>5) %>%
+  group_by(a9) %>%
+  summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
+  ggplot() + 
+	geom_line(aes(x = a9, y = avgdayslink), stat="identity") +
+  labs(title = "Education vs. Days to link to primary care", y = "Average days to link to primary care", x  = "Years of education")
+```
+
+#group 3: graph alcohol vs. substatus
+
+#checking cox ph assumptions
+```{r}
+#checking proportional hazard
+cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help))
+```
+
+#final model
+```{r}
+coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data = help) %>% tidy()
+```
+
