@@ -65,8 +65,8 @@ We will do two topics: investigation of the proportional hazards assumptions usi
 
 #### More EDA
 
-#variables tried (and not interested): age, gender, race, M16, E10B1_R
-#variables interested: group (by default), education, anysubstatus, abuse2, alcohol, F1I, E15C2 (maybe)
+#variables tried (and not interested): age, gender, race (ask hardin about this one tomorrow morning), M16, E10B1_R, E15C2, G1B_30
+#variables interested: group (by default), education, anysubstatus, abuse2, alcohol, F1I 
 
 ```{r}
 #GROUP
@@ -254,23 +254,24 @@ G7 <- 2*(-716.0107-(-718.0145))
 #E15C2: I did not know where to go for help (0=No, 1=Yes)
 
 help_surv <- survfit(Surv(dayslink, linkstatus) ~ e15c2, data=help)
-ggsurvplot(help_surv, conf.type = "TRUE") +
+ggsurvplot(help_surv, conf.type="log", censor=F, conf.int=T) +
   ggtitle("HELP data EDA")
 
 coxph(Surv(dayslink,linkstatus) ~ e15c2, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ e15c2, data = help) %>% tidy()
 coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
 
 #G-statistic
 G8 <- 2*(-107.8898-(-718.0145))
 1-pchisq(G8,1)
 
-#E15C2 is significant (way too small of a p-value, pretty sus) 
+#E15C2 is not significant (even though G-stat is significant; look at tidy()pval and logCI on KM curves)
 
 help %>%
   group_by(e15c2) %>%
   summarize(n())
 
-#seems like there's not that many NAs...or am I trippin
+#seems like there's not that many NAs
 ```
 
 ```{r}
@@ -347,4 +348,26 @@ G5 <- 2*(--411.8382-(-715.9021))
 1-pchisq(G5,1)
 
 #alcohol does significantly affect the curve
+```
+
+```{r}
+#G1B_30 Had thoughts of suicide - last 30 days (0=No, 1=Yes)
+
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ g1b_30, data=help)
+ggsurvplot(help_surv, conf.type="log", censor=F, conf.int=T) +
+  ggtitle("HELP data EDA")
+
+coxph(Surv(dayslink,linkstatus) ~ g1b_30, data = help) %>% glance()
+coxph(Surv(dayslink,linkstatus) ~ g1b_30, data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
+
+#G-statistic
+G11 <- 2*(-177.9322-(-718.0145))
+1-pchisq(G11,1)
+
+#G1B_30 is not significant, even though G-stat gives a significant result; look at tidy()p-val and logCI on KM curves
+
+help %>%
+  group_by(g1b_30) %>%
+  summarize(n())
 ```
