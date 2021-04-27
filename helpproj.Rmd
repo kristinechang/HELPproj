@@ -40,7 +40,11 @@ library(broom)
 #open to an explanation of what it means to be a time-dependent covariate. make it part of the model or dataset--coxzph looks like a wald or something??? if you look carefully at the likelihood we derive in the notes, all of the e^etc need to cancel, and they're not going to cancel if they're a function of t. 
 
 #extension on rough draft,..?
+
 #ask for help for a alcohol vs. anysubstatus graph
+#look at hw 8, graph multiple KM curves to compare them to each other
+#since we have two categorical variables, graphing multiple KM curves is our best option (esp if we think there is some kind of interaction going on between them)
+
 
 #TO DO
 #should we use anysubstatus? 
@@ -248,6 +252,8 @@ G <- 2*(-386.3138-(-389.7752))
 #a9: education has a negative coefficient which is unexpected (more years education = lower hazard of being linked to primary care). maybe bc if you're highly educated and in a detox unit, your circumstances are out of the ordinary/extremely strenuous. maybe also shame?
 
 #for alcohol, we see if your 1st/2nd drug of choice is alcohol, you have a higher rate of getting linked to primary care. weird?!?!?!?!? but then you look @ any substatus and see that if you've used any of an assortment of drugs, your rate of getting linked lowers. so, maybe alcohol is relatively less harmful than other substances, so if people's 1st/2nd drug of choice is NOT alcohol, they're using relatively more harmful/illegal/illicit substances. 
+
+#hw 8! plotting KM curves, make 4-6 
 
 #graph 1: survival curve between group and treatment
 ```{r}
