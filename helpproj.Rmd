@@ -29,13 +29,21 @@ library(broom)
 #what to write in the "methods" section?
 #what i want is YOUR methods. what did you do? can we repeat this? be clear about what the model was, whether you used wald vs likelihood ratio, etc. only tell hardin what you ARE including!
 
-#ask for help for a alcohol vs. anysubstatus graph
 #transformations—how do we know when we should transform a variable? esp a categorical one?
+#don't transform a categorical variable
+#if you have a numeric variable and you wanna know if the hazard is linear in the age squared (e.g. e^{beta squared}), a one unit increase in age squared would be linear in the log hazard ratio. Age squared would be your unit of measurement
+#NOT expecting people to do that
+
 #time dependent covariates...do we need to give a summary of what they are in the paper? is it okay if we only analyze like, one time dependent covariate (maybe education or alcohol or substatus)?
+#anderson-gill is on modeling. a way to incorporate a covariate that you think is time-dependent. available in the RMS package
+#are we talking about testing for time-dependent covariates, or are we going to use time-dependent covariates? 
+#open to an explanation of what it means to be a time-dependent covariate. make it part of the model or dataset--coxzph looks like a wald or something??? if you look carefully at the likelihood we derive in the notes, all of the e^etc need to cancel, and they're not going to cancel if they're a function of t. 
+
 #extension on rough draft,..?
+#ask for help for a alcohol vs. anysubstatus graph
 
 #TO DO
-#do cloglog for survival curves to check PH 
+#should we use anysubstatus?
 
 #### Load in data set
 
@@ -245,7 +253,7 @@ G <- 2*(-386.3138-(-389.7752))
 ```{r}
 #survival curve between group and treatment
 help_surv <- survfit(Surv(dayslink, linkstatus) ~ group, data=help)
-ggsurvplot(help_surv, censor=F, conf.int=T, fun="cloglog") +
+ggsurvplot(help_surv, conf.type = "TRUE") +
   ggtitle("HELP data EDA")
 ```
 
@@ -264,7 +272,9 @@ help %>%
 
 #checking cox ph assumptions
 ```{r}
-#checking proportional hazard
+ggsurvplot(help_surv, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("HELP data EDA")
+
 cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help))
 ```
 
