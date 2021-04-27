@@ -43,7 +43,7 @@ library(broom)
 #ask for help for a alcohol vs. anysubstatus graph
 
 #TO DO
-#should we use anysubstatus?
+#should we use anysubstatus? 
 
 #### Load in data set
 
