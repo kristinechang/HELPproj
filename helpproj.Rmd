@@ -20,12 +20,22 @@ library(broom)
 
 #QUESTIONS
 #what to do w missing data in the "anysubstatus" column
+#if the variable is already categorical, you could make it have three levels: yes, no, unavailable. if you aren't going to use the info w the third category, you should just avoid the variable.
+
 #group violates PH based on coxzph. what to do ?!?
-#ask for help for a alcohol vs. anysubstatus graph
+#looks ok--curves seem parallel
+#don't worry about p-value--worry more about understanding the task. find more detail about the test and think about that coxzph test will let you do more variables at a time, is the p-value impacted by using many variables? why would the coxzph give me a sig p-value when the log log curves seem parallel?
+
 #what to write in the "methods" section?
+#what i want is YOUR methods. what did you do? can we repeat this? be clear about what the model was, whether you used wald vs likelihood ratio, etc. only tell hardin what you ARE including!
+
+#ask for help for a alcohol vs. anysubstatus graph
 #transformations—how do we know when we should transform a variable? esp a categorical one?
-#extension on rough draft,..?
 #time dependent covariates...do we need to give a summary of what they are in the paper? is it okay if we only analyze like, one time dependent covariate (maybe education or alcohol or substatus)?
+#extension on rough draft,..?
+
+#TO DO
+#do cloglog for survival curves to check PH 
 
 #### Load in data set
 
