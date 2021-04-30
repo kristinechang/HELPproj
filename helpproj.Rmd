@@ -55,6 +55,10 @@ We load in the data.
 
 ```{r}
 help <- read_csv("https://pomona.box.com/shared/static/nty3oxpb8db1y763l6uusxtq4gukbcev")
+help <- help %>%
+  mutate(anysubstatus2 = as.factor(anysubstatus)) %>%
+  mutate(alcohol2 = as.factor(alcohol)) %>%
+  mutate(group2 = as.factor(group))
 ```
 
 #### EDA
@@ -156,7 +160,7 @@ ggsurvplot(help_surv, conf.type = "TRUE") +
 coxph(Surv(dayslink,linkstatus) ~ f1i, data = help) %>% glance()
 coxph(Surv(dayslink,linkstatus) ~ 1, data = help) %>% glance()
 
-coxph(Surv(dayslink,linkstatus) ~ f1i, data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(f1i), data = help) %>% tidy()
 
 #G-statistic
 G7 <- 2*(-716.0107-(-718.0145))
@@ -274,26 +278,57 @@ help %>%
   labs(title = "Education vs. Days to link to primary care", y = "Average days to link to primary care", x  = "Years of education")
 ```
 
-#group 3: graph alcohol vs. substatus
 
-#checking cox ph assumptions
+#group 3: alcohol + substatus KM curves
 ```{r}
-ggsurvplot(help_surv, censor=F, conf.int=T, fun="cloglog") +
-  ggtitle("HELP data EDA")
+help_surv2 <- survfit(Surv(dayslink, linkstatus) ~ alcohol2 + anysubstatus2, data=help)
 
-cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help))
+ggsurvplot(help_surv2, conf.type = "TRUE") + 
+  ggtitle("KM Curves of alc + substatus")
 ```
 
 #final model
 ```{r}
-coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus)*as.factor(alcohol) + as.factor(group) + a9, data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus)*as.factor(alcohol) + as.factor(group) + a9, data = help) %>% glance()
+
+#compared to the additive model, the interactive model above is better
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus) + as.factor(alcohol) + as.factor(group) + a9, data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus) + as.factor(alcohol) + as.factor(group) + a9, data = help) %>% glance()
+
+G <- 2*(-384.2038-(-386.3138))
+1-pchisq(G,1)
 ```
 
-#alcohol + substatus KM curves
+#checking cox ph assumptions
 ```{r}
-help_surv <- survfit(Surv(dayslink, linkstatus) ~ as.factor(alcohol) + as.factor(anysubstatus), data=help)
+#check PH for interaction b/t alcohol2 and anysubstatus2
+help_surv3 <- survfit(Surv(dayslink, linkstatus) ~ alcohol2 + anysubstatus2, data=help)
 
-ggsurvplot(help_surv, conf.type = "TRUE") + 
-  ggtitle("KM Curves of alc + substatus")
+ggsurvplot(help_surv3, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("HELP data EDA")
+
+#check PH for group2
+help_surv4 <- survfit(Surv(dayslink, linkstatus) ~ group2, data=help)
+
+ggsurvplot(help_surv4, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("HELP data EDA")
+
+#make a9 into categorical to check PH...ask Hardin
+#help <- help %>%
+#  mutate(a9cat = case_when(
+#    a9 <= 10 ~ "under10",
+#    a9 <= 17 ~ "under17",
+#    TRUE ~ "18-24")) %>%
+#      mutate(a9cat = factor(a9, levels = c("under10","under17","18-24")))
+
+#check PH for a9
+#help_surv5 <- survfit(Surv(dayslink, linkstatus) ~ a9cat, data=help)
+
+#ggsurvplot(help_surv5, censor=F, conf.int=T, fun="cloglog") +
+#  ggtitle("HELP data EDA")
+
+#check all variables
+cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help))
 ```
 
