@@ -289,3 +289,11 @@ cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anys
 coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data = help) %>% tidy()
 ```
 
+#alcohol + substatus KM curves
+```{r}
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ as.factor(alcohol) + as.factor(anysubstatus), data=help)
+
+ggsurvplot(help_surv, conf.type = "TRUE") + 
+  ggtitle("KM Curves of alc + substatus")
+```
+
