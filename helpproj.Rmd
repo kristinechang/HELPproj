@@ -201,6 +201,7 @@ coxph(Surv(dayslink,linkstatus) ~ alcohol, data = help) %>% tidy()
 
 #alcohol does significantly affect the curve
 ```
+
 ```{r}
 #abuse2: Type of abuse (0=No abuse, 1=Physical only, 2=Sexual only, 3=Physical and sexual)
 
@@ -278,13 +279,32 @@ help %>%
   labs(title = "Education vs. Days to link to primary care", y = "Average days to link to primary care", x  = "Years of education")
 ```
 
-
 #group 3: alcohol + substatus KM curves
 ```{r}
 help_surv2 <- survfit(Surv(dayslink, linkstatus) ~ alcohol2 + anysubstatus2, data=help)
 
 ggsurvplot(help_surv2, conf.type = "TRUE") + 
   ggtitle("KM Curves of alc + substatus")
+
+#maybe do a sexy bar chart ??? alc/sub x mean or median dayslink
+help %>%
+  group_by(alcohol2, anysubstatus2) %>%
+  summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) 
+
+
+
+
+`prefers alcohol, hasn't used substances`<-c(201.3793)
+`doesn't prefer alcohol, hasn't used substances`<-c(206.8125)
+`prefers alcohol, has used substances`<-c(244.8367)
+`doesn't prefer alcohol, has used substances`<-c(284.8600)
+
+df <- data.frame(`prefers alcohol, hasn't used substances`,`doesn't prefer alcohol, hasn't used substances`,`prefers alcohol, has used substances`,`doesn't prefer alcohol, has used substances`)
+
+df %>%
+  ggplot() + 
+	geom_bar(aes(x = a9, y = avgdayslink), stat="identity") +
+  labs(title = "Education vs. Days to link to primary care", y = "Average days to link to primary care", x  = "Years of education")
 ```
 
 #final model
@@ -297,6 +317,27 @@ coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus) + as.factor(alcohol) +
 coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus) + as.factor(alcohol) + as.factor(group) + a9, data = help) %>% glance()
 
 G <- 2*(-384.2038-(-386.3138))
+1-pchisq(G,1)
+
+#likelihood ratio tests: taking out alcohol
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus) + as.factor(group) + a9, data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus) + as.factor(group) + a9, data = help) %>% glance()
+
+G <- 2*(-384.2038-(-388.8306))
+1-pchisq(G,1)
+
+#likelihood ratio test: taking out education
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus)*as.factor(alcohol) + as.factor(group), data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus)*as.factor(alcohol) + as.factor(group), data = help) %>% glance()
+
+G <- 2*(-384.2038-(-388.3825))
+1-pchisq(G,1)
+
+#likelihood ratio test: taking out substatuts
+coxph(Surv(dayslink,linkstatus) ~ as.factor(alcohol) + as.factor(group) + a9, data = help) %>% tidy()
+coxph(Surv(dayslink,linkstatus) ~ as.factor(alcohol) + as.factor(group) + a9, data = help) %>% glance()
+
+G <- 2*(-384.2038-(-669.8758))
 1-pchisq(G,1)
 ```
 
@@ -329,6 +370,11 @@ ggsurvplot(help_surv5, censor=F, conf.int=T, fun="cloglog") +
   ggtitle("Log-log graph for a9")
 
 #check all variables
+#w/o log transformation of time
 cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help))
+#w/ log transformation of time
+cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help), transform="log")
+
+ggcoxzph(cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help)))
 ```
 
