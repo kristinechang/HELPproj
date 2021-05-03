@@ -1,5 +1,5 @@
 ---
-title: "Final Project Rough Draft"
+title: "Exploratory Analysis of Linkage with Primary Care and Multi-disciplinary Health Intervention"
 author: "Kristine Chang and Hanna Kim"
 date: "Sunday, May 2, 2021"
 output: pdf_document
@@ -26,9 +26,33 @@ help <- help %>%
 
 #### Introduction
 
+
+In the United States, approximately 95,000 people die from alcohol-related instances every year. This makes alcohol the third-leading cause of death in the US (Alcohol Facts and Statistics | National Institute on Alcohol Abuse and Alcoholism (NIAAA), 2021). In addition, alcohol dependency can cause chronic conditions, such as liver disease, heart disease, liver cancer, alcohol use disorder (AUD), and breast cancer, all of which are the greatest contributors to alcohol-related deaths (Alcohol Facts and Statistics | National Institute on Alcohol Abuse and Alcoholism (NIAAA), 2021). Moreover, more than 70,000 Americans died from drug-related overdose in 2019, and overall, deaths caused by drug overdose are increasing in the U.S. (National Institute on Drug, 2021). Although there are many rehabilitation centers across the U.S. for alcohol and drug dependent people, approximately 40-60% of people treated for alcohol and/or drug addiction relapse within a year (Why Do Alcoholics and Addicts Relapse So Often?, 2017).  Therefore, it is vital to link these alcohol and drug abusers to primary care, even after they have completed rehabilitation. Linking alcohol and drug dependent people to primary care can improve the patients’ overall quality of life by mitigating substance abuse severity, medical issues, and mental health problems, making a patient’s chance of relapse significantly lower. In addition, linkage with primary care can prevent a patient’s relapse by allowing primary care officials to identify early signs of relapse and mental health problems and to practice prevention techniques (Samet et al., 2001). 
+
+
+In an attempt to link more alcohol and drug abusers to primary care, a multidisciplinary medical clinic was established in a substance abuse treatment unit. Accordingly, this clinic was called the health evaluation and linkage to primary care (HELP) clinic. The clinic’s main purpose was to “perform a single comprehensive initial evaluation at the substance abuse treatment facility and then arrange subsequent follow-up with a primary care physician from whom the patient could receive ongoing health care” (Samet et al., 2003). The study randomly assigned patients undergoing detoxification for alcohol and drug problems to the clinic in order to test the clinic’s effectiveness in linking the patients with primary care. Using this study’s data, we will test our primary hypothesis that alcohol and drug dependent people assigned to the HELP clinic are more likely to link with primary care and will take less time to do so. 
+
+
+In our study, besides looking at the impact of the intervention HELP clinic, we also examined other variables and their impact on the linkage to primary care, including years of education completed, substance use status, and alcohol preference. Based on our exploratory data analysis (see more in the Results section), we predict that alcohol and drug dependent people assigned to the HELP clinic will have a higher hazard of linking to primary care. Additionally, we predict that the hazard of linkage to primary care will decrease as the years of education completed increases and if the patient uses alcohol or any other substance within 6 months of leaving the clinic. 
+
+
 #### Methods
 
+
+We used the dataset from the Health Evaluation and Linkage to Primary Care (HELP; Samet et al., 2003) study to examine the variables that affect the time for detoxification clinic patients to link to primary medical care. 
+
+
+We took a survival analysis approach to evaluate whether the primary explanatory variable of interest, intervention through the HELP clinic, significantly impacted the time to link to primary medical care. Our event of interest was linkage to primary medical care, which coincided with our time-to-event variable, which was the number of days it took for a patient to link to primary medical care. We used a censoring indicator to mark when observations of patients ended before they were linked to primary medical care. We created Kaplan-Meier survival curves to determine whether the intervention affected linkage to primary care.
+	
+	
+We created a Cox Proportional Hazards (PH) model to model the hazard of the event of interest at given points in time. As explanatory variables, we included type of intervention group, years of education, alcohol preference, and substance usage. We included alcohol preference and substance usage in the model as interacting variables. To test whether our variables significantly affected our model, we conducted likelihood ratio tests on each of the variables, starting with the variables with the highest p-values. Thus, we conducted the likelihood ratio tests between the full model and models without the alcohol preference, education, and substance usage variables, in that order. We did not conduct the likelihood ratio test between the full model and the model without the treatment variable, since the treatment variable was the primary explanatory variable of interest. We also conducted a likelihood ratio test between the models that had alcohol preference and substance usage as additive variables and as interactive variables.
+	
+	
+The Cox PH model assumes proportional hazards, or that the hazard ratios of the variables do not depend on time. Therefore, we checked whether the proportional hazards assumption held for our Cox PH model in two ways: using log-log transformations on the relevant survival curves and Schoenfeld residuals. In the `cox.zph()` function, each covariate is scaled with Schoenfeld residuals, or separate residuals for each participant for each covariate, with time. This computation allows the function to check for independence between time and the residuals—in other words, the function creates interactions with time. A p-value less than 0.05 indicates that there are significant interactions with time; proportionality necessitates that the hazard does not change over time, and a significant interaction with time indicates that the model violates the proportional hazards assumptions.
+
+
 #### Results
+
 
 We wanted to see which variables impacted linkage to primary care for alcohol and drug abusers. Our primary variable of interest was intervention through the HELP clinic. Kaplan-Meier survival curves showed that the group which received the intervention had shorter survival times than the control group and took less time to link to primary care. In other words, the intervention was consistently more effective in linking patients to primary care.
 
@@ -104,6 +128,7 @@ help_surv5_log <- survfit(Surv(log(dayslink), linkstatus) ~ a9cat, data=help)
 ggsurvplot(help_surv5, censor=F, conf.int=T, fun="cloglog") +
   ggtitle("Log-log graph for education")
 ```
+
 We also examined whether the variables interacted with time using Schoenfeld residuals using time and the log of time. Using this method, we found that only the treatment group violated the proportional hazards assumption. 
 
 ```{r, echo=FALSE}
@@ -115,5 +140,26 @@ cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anys
 
 
 #### Discussion
+
+
+Using data from the HELP study, we found that patients who received intervention through the HELP clinic took fewer days to link to primary care and were more likely to link to primary care. These results suggest that the HELP clinic is effective for connecting patients to primary care and should be offered more extensively to patients in detoxification clinics. Further research should be conducted as to what components of the HELP clinic are most or least helpful for patients. 
+
+Additionally, patients were less likely to link to primary care if they had more years of education. We have several hypotheses as to why this might be the case: it is possible that patients with more years of education feel more stigma in their alcohol or drug usage, or that a person with more education who uses substances regularly has particularly extenuating circumstances that make it more difficult for them to link to primary care. More research should be conducted to examine the reasons for how and why years of education impacts one’s substance usage as well as one’s process of rehabilitation. 
+
+Patients who had not used substances within the past six months were most likely to link to primary care, especially if their first/second substance of choice was alcohol. These results suggest that patients who relapse with alcohol or do not relapse at all are more likely to link to primary care compared with those who relapse with other substances, including heroin and cocaine. The interaction between substance use and alcohol use indicates that the instantaneous hazard of linking to primary care if one’s first/second substance of choice was alcohol is dependent on the instantaneous hazard of linking to primary care if any substance was used in the past 6 months. To further explain, for a patient whose first/second substance of choice is alcohol, the instantaneous hazard of linking to primary care will be impacted by whether or not they used any substance in the past 6 months. If they did not use any substance in the past 6 months, their instantaneous hazard of linking with primary care would increase, even if they reported that their first/second substance of choice is alcohol. Conversely, if a patient whose first/second substance of choice is alcohol did use any substance in the past 6 months, their instantaneous hazard of linking with primary care would decrease. 
+
+Overall, our study suggests several possible avenues of further research. Because this data set is exploratory and therefore more likely to yield false positives, our results only indicate possible correlations between linkage to primary care and several variables, which require further research and testing to confirm. 
+
  
 #### References
+
+Castaneda, R. (2017). Why Do Alcoholics and Addicts Relapse So Often? US News & World Report.
+
+Hardin, J. (2021). Survival Analysis. Methods in Biostatistics. http://st47s.com/Math150/Notes/survival-analysis.html#survival-analysis
+
+National Institute on Alcohol Abuse and Alcoholism. (2021). Alcohol Facts and Statistics | National Institute on Alcohol Abuse and Alcoholism (NIAAA). 
+
+National Institute on Drug Abuse. (2021). Overdose Death Rates. National Institute on Drug Abuse. 
+Samet, J. H., Friedmann, P., & Saitz, R. (2001). Benefits of Linking Primary Medical Care and Substance Abuse Services: Patient, Provider, and Societal Perspectives. Archives of Internal Medicine, 161(1), 85. 
+
+Samet, J. H., Larson, M. J., Horton, N. J., Doyle, K., Winter, M., & Saitz, R. (2003). Linking alcohol- and drug-dependent adults to primary medical care: A randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit. Addiction (Abingdon, England), 98(4), 509–516. 
