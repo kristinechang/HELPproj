@@ -291,9 +291,7 @@ help %>%
   group_by(alcohol2, anysubstatus2) %>%
   summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) 
 
-
-
-
+#helppp
 `prefers alcohol, hasn't used substances`<-c(201.3793)
 `doesn't prefer alcohol, hasn't used substances`<-c(206.8125)
 `prefers alcohol, has used substances`<-c(244.8367)
@@ -305,6 +303,12 @@ df %>%
   ggplot() + 
 	geom_bar(aes(x = a9, y = avgdayslink), stat="identity") +
   labs(title = "Education vs. Days to link to primary care", y = "Average days to link to primary care", x  = "Years of education")
+
+help %>%
+ggplot() + 
+  geom_bar(aes(x = as.factor(alcohol2), y = dayslink, group = anysubstatus, fill = anysubstatus), 
+           position = "dodge", stat = "summary", fun.y = "mean") +
+  coord_flip()
 ```
 
 #final model
@@ -333,12 +337,30 @@ coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus)*as.factor(alcohol) + a
 G <- 2*(-384.2038-(-388.3825))
 1-pchisq(G,1)
 
-#likelihood ratio test: taking out substatuts
+#likelihood ratio test: taking out substatus
 coxph(Surv(dayslink,linkstatus) ~ as.factor(alcohol) + as.factor(group) + a9, data = help) %>% tidy()
 coxph(Surv(dayslink,linkstatus) ~ as.factor(alcohol) + as.factor(group) + a9, data = help) %>% glance()
 
 G <- 2*(-384.2038-(-669.8758))
 1-pchisq(G,1)
+
+#calculating CIs
+
+#treatment
+exp(1.7182155+1.96*0.27459379)
+exp(1.7182155-1.96*0.27459379)
+
+#education 
+exp(-0.1575370+1.96*0.05499391)
+exp(-0.1575370-1.96*0.05499391)
+
+#substance usage
+exp(-1.4868904+1.96*0.44711076)
+exp(-1.4868904-1.96*0.44711076)
+
+#substance usage x alcohol preference
+exp(1.1076608+1.96*0.53036480)
+exp(1.1076608-1.96*0.53036480)
 ```
 
 #checking cox ph assumptions

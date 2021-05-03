@@ -1,0 +1,119 @@
+---
+title: "Final Project Rough Draft"
+author: "Kristine Chang and Hanna Kim"
+date: "Sunday, May 2, 2021"
+output: pdf_document
+---
+
+```{r global_options, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, fig.height=3, fig.width=5, 
+                      fig.align = "center")
+library(rmarkdown)
+library(tidyverse)
+library(mosaic)
+library(survminer)
+library(tidyr)
+library(dplyr)
+library(survival)
+library(broom)
+
+help <- read_csv("https://pomona.box.com/shared/static/nty3oxpb8db1y763l6uusxtq4gukbcev")
+help <- help %>%
+  mutate(anysubstatus2 = as.factor(anysubstatus)) %>%
+  mutate(alcohol2 = as.factor(alcohol)) %>%
+  mutate(group2 = as.factor(group))
+```
+
+#### Introduction
+
+#### Methods
+
+#### Results
+
+We wanted to see which variables impacted linkage to primary care for alcohol and drug abusers. Our primary variable of interest was intervention through the HELP clinic. Kaplan-Meier survival curves showed that the group which received the intervention had shorter survival times than the control group and took less time to link to primary care. In other words, the intervention was consistently more effective in linking patients to primary care.
+
+```{r, echo=FALSE}
+help_surv <- survfit(Surv(dayslink, linkstatus) ~ group, data=help)
+plot(help_surv, lty=2:4, xlab="Time to link to primary care in days", ylab="Survival probability")
+legend(10,.4, c("no intervention", "intervention"),lty=2:4) 
+```
+
+Our secondary variables of interest were education, alcohol preference, and substance usage. Exploratory data analysis of the relationship between education and days to link to primary care indicated a generally positive correlation up until 20 years of education, before which the more education a patient had, the more days they took to link to primary care.
+
+```{r, echo=FALSE}
+help %>%
+  filter(a9>5) %>%
+  group_by(a9) %>%
+  summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
+  ggplot() + 
+	geom_line(aes(x = a9, y = avgdayslink), stat="identity") +
+  labs(title = "Education vs. Days to link to primary care", y = "Average days to link to primary care", x  = "Years of education") +
+  theme_classic()
+```
+
+We created survival curves to explore the interaction between alcohol preference and substance usage in the past six months. Patients answered yes or no as to whether alcohol was their first/second substance of choice, as well as if they had used cocaine, heroin, or alcohol since leaving the detoxification clinic. The survival curves show that patients who had not used any substances in the past six months were the quickest to connect to primary care, while patients whose first choice of substance was NOT alcohol and who had used substances in the past six months took the longest to connect to primary care.
+
+```{r, echo=FALSE}
+help_surv2 <- survfit(Surv(dayslink, linkstatus) ~ alcohol2 + anysubstatus2, data=help)
+
+ggsurvplot(help_surv2, conf.type = "TRUE") + 
+  labs(title = "Alcohol Preference & Substance Usage", x = "Average days to link to primary care", y = "Survival probability") 
+```
+
+We created a Cox PH model to examine the risk of connecting to primary care based on the following variables: intervention, education, alcohol preference, and substance usage. Our model uses the interaction between alcohol preference and substance usage. Patients who had received the intervention were more likely to connect to primary care (HR, 5.57; 95% CI, 3.24 to 9.55; P=4x10^-10). Patients were significantly less likely to link to primary care if they had more years of education (HR, 0.85; 95% CI, 0.77 to 0.95; P=0.004) or if they had used substances in the past month (HR, 0.226; 95% CI, 0.09 to 0.54; P=0.0009). Patients were more likely to link to primary care if their first/second choice of substance was alcohol and if they had used substances in the past six months (HR, 3.03; 95% CI, 1.07 to 8.56; P=0.03).
+
+```{r, echo=FALSE}
+#cox PH model
+coxph(Surv(dayslink,linkstatus) ~ as.factor(anysubstatus)*as.factor(alcohol) + as.factor(group) + a9, data = help) %>% tidy()
+```
+
+To check for Cox PH model assumptions, we transformed survival curves for each of the variables we used in the log-log space, both for time and the log of time. Using this method, we found that only the intervention variable did not violate the proportional hazards assumption.
+
+```{r, echo=FALSE}
+#check PH for group2
+help_surv4 <- survfit(Surv(dayslink, linkstatus) ~ group2, data=help)
+ggsurvplot(help_surv4, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("Log-log graph for intervention")
+
+help_surv4_log <- survfit(Surv(log(dayslink), linkstatus) ~ group2, data=help)
+ggsurvplot(help_surv4_log, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("Log-log graph for intervention")
+
+#check PH for interaction between alcohol preference and substance usage
+help_surv3 <- survfit(Surv(dayslink, linkstatus) ~ alcohol2 + anysubstatus2, data=help)
+ggsurvplot(help_surv3, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("Log-log graph for alc pref and substance usage")
+
+help_surv3_log <- survfit(Surv(log(dayslink), linkstatus) ~ alcohol2 + anysubstatus2, data=help)
+ggsurvplot(help_surv3_log, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("Log-log graph for alc pref and substance usage")
+
+#check PH for education
+help <- help %>%
+  mutate(a9cat = case_when(
+    a9 <= 10 ~ "under10",
+    a9 <= 17 ~ "under17",
+    TRUE ~ "18-24")) %>%
+      mutate(a9cat = factor(a9cat, levels = c("under10","under17","18-24")))
+
+help_surv5 <- survfit(Surv(dayslink, linkstatus) ~ a9cat, data=help)
+ggsurvplot(help_surv5, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("Log-log graph for education")
+
+help_surv5_log <- survfit(Surv(log(dayslink), linkstatus) ~ a9cat, data=help)
+ggsurvplot(help_surv5, censor=F, conf.int=T, fun="cloglog") +
+  ggtitle("Log-log graph for education")
+```
+We also examined whether the variables interacted with time using Schoenfeld residuals using time and the log of time. Using this method, we found that only the treatment group violated the proportional hazards assumption. 
+
+```{r, echo=FALSE}
+#w/o log transformation of time
+cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help))
+#w/ log transformation of time
+cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help), transform="log")
+```
+
+
+#### Discussion
+ 
+#### References
