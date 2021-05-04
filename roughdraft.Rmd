@@ -58,21 +58,26 @@ We wanted to see which variables impacted linkage to primary care for alcohol an
 
 ```{r, echo=FALSE}
 help_surv <- survfit(Surv(dayslink, linkstatus) ~ group, data=help)
-plot(help_surv, lty=2:4, xlab="Time to link to primary care in days", ylab="Survival probability")
-legend(10,.4, c("no intervention", "intervention"),lty=2:4) 
+
+ggsurvplot(help_surv, conf.type = "TRUE", legend.labs = c("No intervention","Intervention")) + 
+  labs(title = "Effect of Intervention on Survival Time", x = "Time to link to primary care in days", y = "Survival probability") 
 ```
 
 Our secondary variables of interest were education, alcohol preference, and substance usage. Exploratory data analysis of the relationship between education and days to link to primary care indicated a generally positive correlation up until 20 years of education, before which the more education a patient had, the more days they took to link to primary care.
 
 ```{r, echo=FALSE}
 help %>%
-  filter(a9>5) %>%
+  filter(a9>5,a9<23) %>%
   group_by(a9) %>%
   summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
   ggplot() + 
 	geom_line(aes(x = a9, y = avgdayslink), stat="identity") +
   labs(title = "Education vs. Days to link to primary care", y = "Average days to link to primary care", x  = "Years of education") +
-  theme_classic()
+  theme_classic() +
+  geom_point(data=help,aes(x=a9,y=dayslink,color=as.factor(linkstatus))) +
+  scale_color_discrete(name="Censor Status of Individuals", labels=c("Censored", "Not censored")) +
+  xlim(5,20)
+ #+ facet_grid(l25~m12)
 ```
 
 We created survival curves to explore the interaction between alcohol preference and substance usage in the past six months. Patients answered yes or no as to whether alcohol was their first/second substance of choice, as well as if they had used cocaine, heroin, or alcohol since leaving the detoxification clinic. The survival curves show that patients who had not used any substances in the past six months were the quickest to connect to primary care, while patients whose first choice of substance was NOT alcohol and who had used substances in the past six months took the longest to connect to primary care.
@@ -80,11 +85,19 @@ We created survival curves to explore the interaction between alcohol preference
 ```{r, echo=FALSE}
 help_surv2 <- survfit(Surv(dayslink, linkstatus) ~ alcohol2 + anysubstatus2, data=help)
 
-ggsurvplot(help_surv2, conf.type = "TRUE") + 
-  labs(title = "Alcohol Preference & Substance Usage", x = "Average days to link to primary care", y = "Survival probability") 
+ggsurvplot(help_surv2, conf.type = "TRUE", legend.labs = c("prefers other substance, no recent substance use", "prefers other substance, recent substance use","prefers alc, no recent substance use", "prefers alc, recent substance use")) + 
+  labs(title = "Preference for Alcohol & Substance Usage", x = "Days to link to primary care", y = "Survival probability") +
+  guides(color = guide_legend(nrow = 2))
 ```
 
 We created a Cox PH model to examine the risk of connecting to primary care based on the following variables: intervention, education, alcohol preference, and substance usage. Our model uses the interaction between alcohol preference and substance usage. Patients who had received the intervention were more likely to connect to primary care (HR, 5.57; 95% CI, 3.24 to 9.55; P=4x10^-10). Patients were significantly less likely to link to primary care if they had more years of education (HR, 0.85; 95% CI, 0.77 to 0.95; P=0.004) or if they had used substances in the past month (HR, 0.226; 95% CI, 0.09 to 0.54; P=0.0009). Patients were more likely to link to primary care if their first/second choice of substance was alcohol and if they had used substances in the past six months (HR, 3.03; 95% CI, 1.07 to 8.56; P=0.03).
+
+#to show/explain interaction:
+#for substance abusers calculate:  hazard (alc = 1) / hazard (alc = 0)
+#for non-sub abusers calculate hazard (alc = 1) / hazard (alc = 0)
+#if those two numbers are (significantly / very) different, then the HR for alcohol or not CHANGES depending on whether or not you use substances
+#that is the 3rd variable (substance) changes the relationship between the 2nd variable (alcohol) and the 1st variable (seeing doctor = response)
+#can change 3rd variable and 2nd variable! they are equivalent (if interacts in one way, interacts w other)
 
 ```{r, echo=FALSE}
 #cox PH model
