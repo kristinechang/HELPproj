@@ -75,7 +75,7 @@ help %>%
   labs(title = "Education vs. Days to link to primary care", y = "Average days to link to primary care", x  = "Years of education") +
   theme_classic() +
   geom_point(data=help,aes(x=a9,y=dayslink,color=as.factor(linkstatus))) +
-  scale_color_discrete(name="Censor Status of Individuals", labels=c("Censored", "Not censored")) +
+  scale_color_discrete(name="Individual Patients", labels=c("Censored", "Not censored")) +
   xlim(5,20)
  #+ facet_grid(l25~m12)
 ```
