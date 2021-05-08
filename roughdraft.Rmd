@@ -67,7 +67,7 @@ Our secondary variables of interest were education, alcohol preference, and subs
 
 ```{r, echo=FALSE}
 help %>%
-  filter(a9>5,a9<23) %>%
+  #filter(a9>5,a9<23) %>%
   group_by(a9) %>%
   summarize(avgdayslink = mean(dayslink,na.rm=TRUE)) %>%
   ggplot() + 
@@ -75,8 +75,8 @@ help %>%
   labs(title = "Education vs. Days to link to primary care", y = "Average days to link to primary care", x  = "Years of education") +
   theme_classic() +
   geom_point(data=help,aes(x=a9,y=dayslink,color=as.factor(linkstatus))) +
-  scale_color_discrete(name="Individual Patients", labels=c("Censored", "Not censored")) +
-  xlim(5,20)
+  scale_color_discrete(name="Individual Patients", labels=c("Censored", "Not censored")) 
+ #+ xlim(5,20)
  #+ facet_grid(l25~m12)
 ```
 
@@ -90,7 +90,7 @@ ggsurvplot(help_surv2, conf.type = "TRUE", legend.labs = c("prefers other substa
   guides(color = guide_legend(nrow = 2))
 ```
 
-We created a Cox PH model to examine the risk of connecting to primary care based on the following variables: intervention, education, alcohol preference, and substance usage. Our model uses the interaction between alcohol preference and substance usage. Patients who had received the intervention were more likely to connect to primary care (HR, 5.57; 95% CI, 3.24 to 9.55; P=4x10^-10). Patients were significantly less likely to link to primary care if they had more years of education (HR, 0.85; 95% CI, 0.77 to 0.95; P=0.004) or if they had used substances in the past month (HR, 0.226; 95% CI, 0.09 to 0.54; P=0.0009). Patients were more likely to link to primary care if their first/second choice of substance was alcohol and if they had used substances in the past six months (HR, 3.03; 95% CI, 1.07 to 8.56; P=0.03).
+We created a Cox PH model to examine the risk of connecting to primary care based on the following variables: intervention, education, alcohol preference, and substance usage. Our model uses the interaction between alcohol preference and substance usage. Patients who had received the intervention were more likely to connect to primary care (adjusted HR, 5.57; 95% CI, 3.24 to 9.55; P=4x10^-10). Patients were significantly less likely to link to primary care if they had more years of education (HR, 0.85; 95% CI, 0.77 to 0.95; P=0.004) or if they had used substances in the past month (HR, 0.226; 95% CI, 0.09 to 0.54; P=0.0009). Patients were more likely to link to primary care if their first/second choice of substance was alcohol and if they had used substances in the past six months (HR, 3.03; 95% CI, 1.07 to 8.56; P=0.03).
 
 #to show/explain interaction:
 #for substance abusers calculate:  hazard (alc = 1) / hazard (alc = 0)
@@ -110,10 +110,6 @@ To check for Cox PH model assumptions, we transformed survival curves for each o
 #check PH for group2
 help_surv4 <- survfit(Surv(dayslink, linkstatus) ~ group2, data=help)
 ggsurvplot(help_surv4, censor=F, conf.int=T, fun="cloglog") +
-  ggtitle("Log-log graph for intervention")
-
-help_surv4_log <- survfit(Surv(log(dayslink), linkstatus) ~ group2, data=help)
-ggsurvplot(help_surv4_log, censor=F, conf.int=T, fun="cloglog") +
   ggtitle("Log-log graph for intervention")
 
 #check PH for interaction between alcohol preference and substance usage
@@ -144,6 +140,8 @@ ggsurvplot(help_surv5, censor=F, conf.int=T, fun="cloglog") +
 
 We also examined whether the variables interacted with time using Schoenfeld residuals using time and the log of time. Using this method, we found that only the treatment group violated the proportional hazards assumption. 
 
+# I’m not sure what you’ve included for the “new” part yet.  Did I miss something?  You did run cox.zph, but you haven’t described what is going on.  Also, I noticed that there is a plot(cox.zph(…) ) function.  What does it do?  Does it help you understand what is going on?  (I’m still sleuthing the difference between the ln(-ln(S(t))) plot and cox.zph opposite results.)
+
 ```{r, echo=FALSE}
 #w/o log transformation of time
 cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help))
@@ -161,7 +159,8 @@ Additionally, patients were less likely to link to primary care if they had more
 
 Patients who had not used substances within the past six months were most likely to link to primary care, especially if their first/second substance of choice was alcohol. These results suggest that patients who relapse with alcohol or do not relapse at all are more likely to link to primary care compared with those who relapse with other substances, including heroin and cocaine. The interaction between substance use and alcohol use indicates that the instantaneous hazard of linking to primary care if one’s first/second substance of choice was alcohol is dependent on the instantaneous hazard of linking to primary care if any substance was used in the past 6 months. To further explain, for a patient whose first/second substance of choice is alcohol, the instantaneous hazard of linking to primary care will be impacted by whether or not they used any substance in the past 6 months. If they did not use any substance in the past 6 months, their instantaneous hazard of linking with primary care would increase, even if they reported that their first/second substance of choice is alcohol. Conversely, if a patient whose first/second substance of choice is alcohol did use any substance in the past 6 months, their instantaneous hazard of linking with primary care would decrease. 
 
-Overall, our study suggests several possible avenues of further research. Because this data set is exploratory and therefore more likely to yield false positives, our results only indicate possible correlations between linkage to primary care and several variables, which require further research and testing to confirm. 
+Overall, our study suggests several possible avenues of further research. 
+#* What do you mean by the data set being exploratory?  It is a full randomized clinical trial.  It isn’t exploratory at all!  Maybe you mean with respect to the demographic variables?  You **can** conclude causation (of the intervention)!!!!  To whom should you feel comfortable generalizing?
 
  
 #### References
