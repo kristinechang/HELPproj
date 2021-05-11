@@ -138,15 +138,15 @@ ggsurvplot(help_surv5, censor=F, conf.int=T, fun="cloglog") +
   ggtitle("Log-log graph for education")
 ```
 
-We also examined whether the variables interacted with time using Schoenfeld residuals using time and the log of time. Using this method, we found that only the treatment group violated the proportional hazards assumption. 
-
-# I’m not sure what you’ve included for the “new” part yet.  Did I miss something?  You did run cox.zph, but you haven’t described what is going on.  Also, I noticed that there is a plot(cox.zph(…) ) function.  What does it do?  Does it help you understand what is going on?  (I’m still sleuthing the difference between the ln(-ln(S(t))) plot and cox.zph opposite results.)
+We examined whether the variables interacted with time using Schoenfeld residuals using time and the log of time. Using this method, we found that only the treatment group violated the proportional hazards assumption. We also plotted the scaled Schoenfeld residuals for each covariate in the model. The solid line in the graph for education (variable a9) is the flattest, oscillating around y=0. The graphs for substance usage (anysubstatus), and alcohol preference (alcohol) showed lines that curved away from y=0 but still had confidence intervals that contained y=0. These graphs visually show how these three variables may still uphold the proportionality assumptions when conducting a PH test using the coxzph() function. However, the graph for treatment (group) is the most variable, with y=0 out of the confidence interval for most of the graph. This graph visually shows why the coxzph() function yields a p-value below 0.05 for the treatment group, indicating that it does not uphold the proportionality assumptions.
 
 ```{r, echo=FALSE}
 #w/o log transformation of time
 cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help))
 #w/ log transformation of time
 cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help), transform="log")
+#coxzph graph
+plot(cox.zph(coxph(Surv(dayslink,linkstatus) ~ as.factor(group) + a9 + as.factor(anysubstatus) + as.factor(alcohol), data=help)))
 ```
 
 
